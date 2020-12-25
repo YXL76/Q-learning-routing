@@ -31,14 +31,11 @@ def update(qlen, queue, t):
     """
     确定是否采集新的数据包并相应的更新队列信息.
 
-    global: maxQ: 队列容量
-    input:  qlen: 队列长度
-            queue: 队列内容
-            t: 当前的时隙
-    output: qlen: 更新队列长度
-            queue: 更新队列内容
+    @param qlen: 队列长度
+    @param queue: 队列内容
+    @param t: 当前的时隙
+    @return: 更新队列长度, 更新队列内容
     """
-
     # 之前进行了交换操作，所以现在源节点就在前sensenum个
     for i in range(0, sense_num):
         '''
@@ -51,9 +48,6 @@ def update(qlen, queue, t):
 
 
 def route_rl(send_nodes, _, positions, qlen, queue, t, qtable, sumdelay, count):
-    """
-    GLOBAL:P1:归一化参数
-    """
     for i in send_nodes:
         max_r = -1  #
         next_node = -1  # 找节点
@@ -79,11 +73,17 @@ def route_rl(send_nodes, _, positions, qlen, queue, t, qtable, sumdelay, count):
 
 def transform_rl(qlen, queue, t, neighbors, positions, qtable, sumdelay, count):
     """
-    确定发送节点集合并调用函数def route_RL(sendNodes, neighbors, positions, qlen, queue, t, Qtable,sumdelay,count)完成传输过程
+    确定发送节点集合并调用函数 route_rl 完成传输过程
 
-    global:
-    input:qlen, queue, t:,neighbors, positions, Qtable,sumdelay,count
-    output:qlen:队列长度, queue: 队列内容,sumdelay: 当前路由的时延,count:
+    @param qlen:
+    @param queue:
+    @param t:
+    @param neighbors:
+    @param positions:
+    @param qtable:
+    @param sumdelay:
+    @param count:
+    @return: 队列长度, 队列内容, 当前路由的时延, count:
     """
     send_nodes = []  # 后续有机会数据包的节点
     list_need = []  # 想要发送数据包的节点
@@ -104,11 +104,17 @@ def transform_rl(qlen, queue, t, neighbors, positions, qtable, sumdelay, count):
     return qlen, queue, sumdelay, count
 
 
-def move_rl(positions, t, qtable, pre_neighbor, m_q, _):  # 更新Qtable,mQ值
+def move_rl(positions, t, qtable, pre_neighbor, m_q, _):
     """
     根据位置信息更新Qtable和mQ，去掉Qtable中已经离开通信节点范围的点并加入新进入的点并添加新进入的点的mQ值。
-    input: positions, t, Qtable, PreNeighbor, mQ, qlen
-    output: neighbors, Qtable, mQ
+
+    @param positions:
+    @param t:
+    @param qtable:
+    @param pre_neighbor:
+    @param m_q:
+    @param _:
+    @return:
     """
     # 如果超出通信范围
     for i in range(total_num):
@@ -142,12 +148,8 @@ def initial_rl(positions):
     """
     初始化Qtable,mQ值: 根据位置信息设置mQ的值，并根据距离决定是否在通信距离中更新邻居列表.
 
-    global:total_num
-    input:position(np[length,nodenum,2]): 某时刻某点的坐标
-    output:neighbors([int]): 邻居列表
-           qtable([[[j,0]]]):第i个位置存储了可以和i通信的节点及该节点的联通度
-           m_q[int]: 节点i到目标节点的联通度（远近）
-           :type positions: object
+    @param positions: 某时刻某点的坐标
+    @return: 邻居列表, 第i个位置存储了可以和i通信的节点及该节点的联通度, 节点i到目标节点的联通度（远近）
     """
     m_q = -1 * np.ones(total_num)  # 初始化表格信息
     neighbors = []
@@ -173,9 +175,8 @@ def begin_rl(positions):
     """
     初始化neighbor，Qtablel，mQ决定是否采集新的数据包至队列(update)；作出传输决策并完成传输，更新队列变化并统计时延(transform)；更新Qtable和mQ(move).
 
-    global: total_num（int）: 节点个数
-    input:  position(np(length,nodenum,2)): 某时刻某点的坐标
-    output: avgdelay（float）: 平均时延
+    @param positions: 某时刻某点的坐标
+    @return: 平均时延
     """
     queue = np.zeros([total_num, 0]).tolist()  # [i][生成时间]
     qlen = np.zeros(total_num)  # 记录每个节点的长度，total_num,一开始队列长度都是0
@@ -199,10 +200,10 @@ def begin_rl(positions):
 
 def positions_of_file(input_file):
     """
-    从mobility文件读入所有节点各时刻的位置信息，并根据给定源数目从仿真时间内始终在仿真区域的节点中随机选择出源节点集
-    input:  inputfile: 输入的文件路径
-    output: position(np(length,nodenum,2)): 某时刻某点的坐标
-            nodenum(int): 节点数目（读取的数目）
+    从mobility文件读入所有节点各时刻的位置信息，并根据给定源数目从仿真时间内始终在仿真区域的节点中随机选择出源节点集.
+
+    @param input_file: 输入的文件路径
+    @return: 某时刻某点的坐标, 节点数目（读取的数目）
     """
     num_per_slot = int(slots / num_slots)  # 时隙数/s
     x_bias = 200  # 用于校正两个场景之间的坐标差异，校正为0~2000
