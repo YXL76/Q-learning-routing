@@ -18,10 +18,6 @@ a2 = 0.8  # RL
 p1 = 10
 AP_pos = [1220, 1040]
 total_num = 0
-isVisual = False  # True#
-
-if isVisual:
-    plt.figure()
 
 
 def dis(x, y):
@@ -31,12 +27,12 @@ def dis(x, y):
     return ((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2) ** 0.5
 
 
-def update(positions, qlen, queue, t):
+def update(qlen, queue, t):
     """
     确定是否采集新的数据包并相应的更新队列信息.
 
-    global: maxQ:队列容量
-    input:  qlen队列长度
+    global: maxQ: 队列容量
+    input:  qlen: 队列长度
             queue: 队列内容
             t: 当前的时隙
     output: qlen: 更新队列长度
@@ -51,11 +47,6 @@ def update(positions, qlen, queue, t):
         if qlen[i] < maxQ:  # 某个源节点的t时刻的队列长度如果小于该节点的队列容量
             queue[i].append([i, t])
             qlen[i] = qlen[i] + 1
-            if isVisual:
-                plt.plot(positions[t][i][0], positions[t][i][1], 'y.')
-        else:
-            if isVisual:
-                plt.plot(positions[t][i][0], positions[t][i][1], 'b.')
     return qlen, queue
 
 
@@ -63,8 +54,6 @@ def route_rl(send_nodes, _, positions, qlen, queue, t, qtable, sumdelay, count):
     """
     GLOBAL:P1:归一化参数
     """
-    if isVisual:
-        plt.clf()
     for i in send_nodes:
         max_r = -1  #
         next_node = -1  # 找节点
@@ -74,9 +63,6 @@ def route_rl(send_nodes, _, positions, qlen, queue, t, qtable, sumdelay, count):
             count += 1  # 目标节点收到的数据包数目
             queue[i].pop(0)  # 认为传出了
             qlen[i] = qlen[i] - 1  # 发出去了所以排队的包少一个
-            if isVisual:
-                plt.annotate('', xy=AP_pos, xytext=(positions[t][i][0], positions[t][i][1]),
-                             arrowprops=dict(arrowstyle="->", connectionstyle="arc3"))
         else:
             for p in qtable[i]:  # 如果不能直接传给AP，挑一个节点作为下一跳
                 if p[1] / p1 + (maxQ - qlen[p[0]]) > max_r and qlen[p[0]] < maxQ:  # 找队短的传
@@ -87,19 +73,6 @@ def route_rl(send_nodes, _, positions, qlen, queue, t, qtable, sumdelay, count):
                 qlen[next_node] = qlen[next_node] + 1
                 queue[i].pop(0)
                 qlen[i] = qlen[i] - 1
-                if isVisual:
-                    plt.annotate('', xy=positions[t][next_node], xytext=(positions[t][i][0], positions[t][i][1]),
-                                 arrowprops=dict(arrowstyle="->", connectionstyle="arc3"))
-    if isVisual:
-        plt.plot(positions[t, 0:sense_num, 0], positions[t, 0:sense_num, 1], 'b.')
-        plt.plot(positions[t, sense_num:, 0], positions[t, sense_num:, 1], 'r.')
-        for m in range(0, total_num):
-            plt.text(positions[t][m][0] - 20, positions[t][m][1] + 20, str(qlen[m]),
-                     fontdict={'size': '6', 'color': 'b'})
-            plt.plot(AP_pos[0], AP_pos[1], 'g^')
-            plt.axis([0, 2000, 0, 2000])
-            plt.draw()
-            plt.waitforbuttonpress()
 
     return qlen, queue, sumdelay, count  # 某个节点队有多长，队里有谁，sum=delay*count系统，目前为止传输到目的节点的数据包数量，
 
@@ -211,19 +184,7 @@ def begin_rl(positions):
     count = 0  # 记录传输到目的节点的数据包数目
     for i in range(0, slots):
         # i是第n个时隙，帮助计算时延
-        if isVisual:  # 可视化
-            plt.clf()
-            plt.plot(positions[i, 0:sense_num, 0], positions[i, 0:sense_num, 1], 'b.')
-            plt.plot(positions[i, sense_num:, 0], positions[i, sense_num:, 1], 'r.')
-            for m in range(0, total_num):
-                plt.text(positions[i][m][0] - 20, positions[i][m][1] + 20, str(qlen[m]),
-                         fontdict={'size': '6', 'color': 'b'})
-            plt.plot(AP_pos[0], AP_pos[1], 'g^')
-            plt.axis([0, 2000, 0, 2000])
-            plt.draw()
-            plt.waitforbuttonpress()
-
-        qlen, queue = update(positions, qlen, queue, i)  # 是否采集新的数据包加入到队列#每个节点: 队多长，队列中的数据包（数据包的源头和生成时间）
+        qlen, queue = update(qlen, queue, i)  # 是否采集新的数据包加入到队列#每个节点: 队多长，队列中的数据包（数据包的源头和生成时间）
         qlen, queue, sumdelay, count = transform_rl(qlen, queue, i, neighbors, positions, qtable, sumdelay,
                                                     count)  # 做出传输决策并完成传输过程，更新队列变化，统计时延
         neighbors, qtable, m_q = move_rl(positions, i, qtable, neighbors, m_q, qlen)  # 更新Qtable,mQ值
