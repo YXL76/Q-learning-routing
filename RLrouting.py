@@ -1,6 +1,7 @@
 import random
 import re
 import time
+from os.path import join
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,7 +15,7 @@ maxQ = 10
 lamb = 0.005
 fixFrequence = 10
 a1 = 0.5  # RL
-a2 = 0.8  # RL
+a2 = 0.5  # RL
 p1 = 10
 AP_pos = [1220, 1040]
 total_num = 0
@@ -22,7 +23,11 @@ total_num = 0
 
 def dis(x, y):
     """
-    根据节点坐标计算任意两点之间的实际距离
+    根据节点坐标计算任意两点之间的实际距离.
+
+    @param x:
+    @param y:
+    @return:
     """
     return ((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2) ** 0.5
 
@@ -73,7 +78,7 @@ def route_rl(send_nodes, _, positions, qlen, queue, t, qtable, sumdelay, count):
 
 def transform_rl(qlen, queue, t, neighbors, positions, qtable, sumdelay, count):
     """
-    确定发送节点集合并调用函数 route_rl 完成传输过程
+    确定发送节点集合并调用函数 route_rl 完成传输过程.
 
     @param qlen:
     @param queue:
@@ -106,7 +111,7 @@ def transform_rl(qlen, queue, t, neighbors, positions, qtable, sumdelay, count):
 
 def move_rl(positions, t, qtable, pre_neighbor, m_q, _):
     """
-    根据位置信息更新Qtable和mQ，去掉Qtable中已经离开通信节点范围的点并加入新进入的点并添加新进入的点的mQ值。
+    根据位置信息更新Qtable和mQ，去掉Qtable中已经离开通信节点范围的点并加入新进入的点并添加新进入的点的mQ值.
 
     @param positions:
     @param t:
@@ -257,10 +262,10 @@ def positions_of_file(input_file):
                         for i in range(num_per_slot - 1):  # 因为num_是10，所以-1*10+8最后一个不赋值
                             # 平均一秒内位置的变化至每个时隙x
                             positions[index + i + 1][identity][0] = positions[index][identity][0] + (
-                                        x - positions[index][identity][0]) / num_per_slot * (i + 1)
+                                    x - positions[index][identity][0]) / num_per_slot * (i + 1)
                             # 平均一秒内位置的变化至每个时隙y
                             positions[index + i + 1][identity][1] = positions[index][identity][1] + (
-                                        y - positions[index][identity][1]) / num_per_slot * (i + 1)
+                                    y - positions[index][identity][1]) / num_per_slot * (i + 1)
 
                     if now < time_begin + num_slots:  # 给最后一个时隙赋值
                         positions[(now - time_begin) * num_per_slot][identity][0] = x
@@ -320,5 +325,5 @@ if __name__ == '__main__':
     print("begin to end: ", end - start)
     plt.plot(sense_numset, out_RL, label="RL")
     plt.legend()
-    plt.savefig("result.png")
+    plt.savefig(join("results", "-".join([str(a1), str(a2)]) + ".png"))
     plt.show()
